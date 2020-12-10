@@ -1,36 +1,77 @@
 from django.shortcuts import render
 from sim_rating.models import Link, Article, Sim_rate, Topic, Source
 from itertools import combinations
+from .forms import SimForm, UserForm
 import random
+from django.shortcuts import redirect
 # Create your views here.
 
 count = 0
 articles = [0, 1, 2, 3]
+page_count = 0
+user_form = {}
+art_count = 0
 def main(request):
-    global articles, count
+    global articles, count, page_count, user_form
     num_articles = Article.objects.all().count()
-    context = {'num_articles': num_articles}
+
+
+    context = {'num_articles': num_articles,'form': user_form}
     articles = random.sample(list(Article.objects.all()), 4)
     count = 1
+    page_count = 0
+    if request.method == 'POST':
+        user_form = UserForm(request.POST)
+        # return redirect(SimRateView1)
+    else:
+        user_form = UserForm()
     return render(request, 'main.html', context=context)
+
+def ArticleView(request):
+
+    global articles, art_count
+    
+    article1 = articles[art_count]
+    progress = 25 * (art_count+1)
+    
+    if art_count < 3:
+        art_count += 1
+        next_url = 'article' + str(art_count+1)
+        print('art_count<3')
+    else:
+        next_url = 'sim_rates/a'
+        
+    context = {'article1': article1, 'next_url': next_url, 'progress': progress}
+    return render(request, 'articles_extend.html', context)
+
 
 def SimRateView1(request):
 
-    global articles, count
-    article_pairs = list(combinations([0 ,1, 2, 3], 2))
-    article_pair = article_pairs[count - 1]
-    article1 = articles[article_pair[0]]
-    article2 = articles[article_pair[1]]
-    count += 1
+    global articles, count, user_form
     
-    if count >= 7:
-        next_url = "end"
+    if count <= 6:
+        article_pairs = list(combinations([0 ,1, 2, 3], 2))
+        article_pair = article_pairs[count - 1]
+        article1 = articles[article_pair[0]]
+        article2 = articles[article_pair[1]]
+        
+        if request.method == 'POST':
+            form = SimForm(request.POST)
+            # check data is valid to post
+            if form.is_valid():
+                similarity = form.data["similarity"]
+                user_id = user_form.data["user_id"]
+                add_rate = Sim_rate(similarity=similarity, article1=article1, article2=article2,  user_id = user_id)
+                add_rate.save()
+                count += 1
+                return redirect(SimRateView1)
+        else:
+            form = SimForm()
+        context = {'article1': article1, 'article2': article2, 'form':form}
+        
+        return render(request, 'article1_2.html', context)
     else:
-        next_url = chr(count+96)
-    
-    context = {'article1': article1, 'article2': article2, 'next_url': next_url}
-    
-    return render(request, 'article1_2.html', context)
+        return render(request, 'end.html')
     
 def end(request):
     return render(request, 'end.html')

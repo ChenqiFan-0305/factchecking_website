@@ -12,9 +12,19 @@
   </div>
 {% endblock %}
 
-{% block count %}
+<div>
+    <form method = 'POST' target = {{next_url}}>
+        {% csrf_token %}
+        
+    {{ form.as_p }}
+        <br>
+        <input type='submit' name='Submit'>
+    </form>
+</div>
+
+<!-- {% block count %}
 <div class="next_button">
     <label> Next </label>
     <a href="{{next_url}}" class="button">Next</a>
 </div>
-{% endblock %}
+{% endblock %} -->

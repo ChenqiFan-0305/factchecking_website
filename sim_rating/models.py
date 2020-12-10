@@ -61,7 +61,8 @@ class Article(models.Model):
     text = models.TextField(blank=True, null=True)
     display = models.TextField(blank=True, null=True)
     image = models.ImageField(blank=True, null=True)
-    source = models.ManyToManyField(Source, null=True)
+    source = models.CharField(max_length=30, blank=True,null=True)
+    # source = models.ManyToManyField('Source',null=True)
     date_published = models.DateField(null=True, blank=True)
     scientific_rate = models.FloatField(blank=True, null=True)
     
@@ -75,8 +76,19 @@ class Sim_rate(models.Model):
     pair_id = models.UUIDField(primary_key=True, default=uuid.uuid4, help_text="Unique ID for the article pair")
     article1 = models.ForeignKey('Article', on_delete=models.SET_NULL, null=True, related_name='article1')
     article2 = models.ForeignKey('Article', on_delete=models.SET_NULL, null=True, related_name='article2')
-    similarity = models.FloatField()
-    
+
+    simi_choice = (
+        (-3,"totally different"),
+        (-2,"almost different"),
+        (-1,"a little bit different"),
+        (0, "nutral"),
+        (1, "a little bit similar"),
+        (2, "almost similar"),
+        (3, "totally similar")
+    )
+    similarity = models.FloatField(choices=simi_choice)
+    user_id = models.CharField(max_length=30,help_text="User ID",null=True)
+
     def __str__(self):
         """
         String for representing the Model object.
